@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,8 +62,50 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+                // VisionWardrobe custom colors
+                ivory: '#FFFFF0',
+                stone: {
+                    50: '#FAFAF9',
+                    100: '#F5F5F4',
+                    200: '#E7E5E4',
+                    300: '#D6D3D1',
+                    400: '#A8A29E',
+                    500: '#78716C',
+                    600: '#57534E',
+                    700: '#44403C',
+                    800: '#292524',
+                    900: '#1C1917',
+                },
+                terracotta: {
+                    100: '#FFF1EE',
+                    200: '#FFE4DE',
+                    300: '#FECDBD',
+                    400: '#FCA692',
+                    500: '#F87761',
+                    600: '#E54D2E',
+                    700: '#BF3913',
+                    800: '#9A280C',
+                    900: '#7E1E08',
+                },
+                teal: {
+                    50: '#F0FDFA',
+                    100: '#CCFBF1',
+                    200: '#99F6E4',
+                    300: '#5EEAD4',
+                    400: '#2DD4BF',
+                    500: '#14B8A6',
+                    600: '#0D9488',
+                    700: '#0F766E',
+                    800: '#115E59',
+                    900: '#134E4A',
+                }
 			},
+            fontFamily: {
+                sans: ['SF Pro Display', 'Helvetica Neue', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                serif: ['ui-serif', 'Georgia', 'serif'],
+                mono: ['ui-monospace', 'SFMono-Regular', 'monospace'],
+            },
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
@@ -84,11 +127,62 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+                'fade-in': {
+                    from: {
+                        opacity: '0'
+                    },
+                    to: {
+                        opacity: '1'
+                    }
+                },
+                'fade-out': {
+                    from: {
+                        opacity: '1'
+                    },
+                    to: {
+                        opacity: '0'
+                    }
+                },
+                'slide-up': {
+                    from: {
+                        transform: 'translateY(20px)',
+                        opacity: '0'
+                    },
+                    to: {
+                        transform: 'translateY(0)',
+                        opacity: '1'
+                    }
+                },
+                'slide-down': {
+                    from: {
+                        transform: 'translateY(-20px)',
+                        opacity: '0'
+                    },
+                    to: {
+                        transform: 'translateY(0)',
+                        opacity: '1'
+                    }
+                },
+                'scale-in': {
+                    from: {
+                        transform: 'scale(0.95)',
+                        opacity: '0'
+                    },
+                    to: {
+                        transform: 'scale(1)',
+                        opacity: '1'
+                    }
+                }
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+                'fade-in': 'fade-in 0.5s ease-out forwards',
+                'fade-out': 'fade-out 0.5s ease-out forwards',
+                'slide-up': 'slide-up 0.6s ease-out forwards',
+                'slide-down': 'slide-down 0.6s ease-out forwards',
+                'scale-in': 'scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards'
 			}
 		}
 	},
