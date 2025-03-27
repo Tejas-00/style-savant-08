@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Camera, Flip, X, CheckCircle2 } from "lucide-react";
+import { Camera, RefreshCw, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -108,7 +108,7 @@ const CameraOverlay: React.FC<CameraOverlayProps> = ({
             onClick={onFlip}
             className="bg-black/30 border-white/30 text-white rounded-full h-12 w-12"
           >
-            <Flip className="h-6 w-6" />
+            <RefreshCw className="h-6 w-6" />
           </Button>
         </div>
       </div>

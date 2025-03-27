@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import CameraOverlay from "@/components/CameraOverlay";
@@ -31,10 +31,18 @@ const CameraView = () => {
     }
   };
   
-  // Start camera on component mount
-  useState(() => {
+  // Start camera on component mount and when facing mode changes
+  useEffect(() => {
     initializeCamera();
-  }, []);
+    
+    // Cleanup function to stop camera when component unmounts
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+      }
+    };
+  }, [facingMode]);
   
   // Handle camera flip
   const flipCamera = () => {
@@ -46,11 +54,6 @@ const CameraView = () => {
     
     // Toggle facing mode
     setFacingMode(facingMode === "user" ? "environment" : "user");
-    
-    // Reinitialize camera
-    setTimeout(() => {
-      initializeCamera();
-    }, 300);
   };
   
   // Handle image capture
