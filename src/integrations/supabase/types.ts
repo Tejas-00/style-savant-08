@@ -9,7 +9,129 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      outfits: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          id: string
+          items: string[]
+          name: string
+          occasion: string | null
+          season: string | null
+          updated_at: string
+          user_id: string
+          weather: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          items: string[]
+          name: string
+          occasion?: string | null
+          season?: string | null
+          updated_at?: string
+          user_id: string
+          weather?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          id?: string
+          items?: string[]
+          name?: string
+          occasion?: string | null
+          season?: string | null
+          updated_at?: string
+          user_id?: string
+          weather?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          body_type: string | null
+          created_at: string
+          hair_color: string | null
+          height: number | null
+          id: string
+          name: string | null
+          preferred_colors: string[] | null
+          preferred_styles: string[] | null
+          skin_tone: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_type?: string | null
+          created_at?: string
+          hair_color?: string | null
+          height?: number | null
+          id: string
+          name?: string | null
+          preferred_colors?: string[] | null
+          preferred_styles?: string[] | null
+          skin_tone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_type?: string | null
+          created_at?: string
+          hair_color?: string | null
+          height?: number | null
+          id?: string
+          name?: string | null
+          preferred_colors?: string[] | null
+          preferred_styles?: string[] | null
+          skin_tone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      wardrobe_items: {
+        Row: {
+          category: string
+          color: string
+          created_at: string
+          formality: string | null
+          id: string
+          image_url: string | null
+          name: string
+          pattern: string | null
+          season: string | null
+          style: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          color: string
+          created_at?: string
+          formality?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          pattern?: string | null
+          season?: string | null
+          style?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          color?: string
+          created_at?: string
+          formality?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          pattern?: string | null
+          season?: string | null
+          style?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

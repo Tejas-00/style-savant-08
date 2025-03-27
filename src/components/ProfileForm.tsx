@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,20 +6,67 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { useToast } from "@/components/ui/use-toast";
 import { staggerContainer, staggerItem } from "@/utils/animations";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProfileForm = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     height: 170,
     bodyType: "",
     skinTone: "",
     hairColor: "",
-    preferredColors: [],
-    preferredStyles: []
+    preferredColors: [] as string[],
+    preferredStyles: [] as string[]
   });
+  
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) {
+          if (error.code !== 'PGRST116') {
+            throw error;
+          }
+          return;
+        }
+        
+        if (data) {
+          setFormData({
+            name: data.name || "",
+            height: data.height || 170,
+            bodyType: data.body_type || "",
+            skinTone: data.skin_tone || "",
+            hairColor: data.hair_color || "",
+            preferredColors: data.preferred_colors || [],
+            preferredStyles: data.preferred_styles || []
+          });
+        }
+      } catch (error: any) {
+        toast({
+          title: "Error loading profile",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    };
+    
+    fetchProfile();
+  }, [user, toast]);
   
   const handleChange = (name: string, value: any) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -30,8 +76,7 @@ const ProfileForm = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Submit and navigate to wardrobe
-      navigate("/wardrobe");
+      handleSubmit();
     }
   };
   
@@ -41,8 +86,47 @@ const ProfileForm = () => {
     }
   };
   
+  const handleSubmit = async () => {
+    if (!user) return;
+    
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          name: formData.name,
+          height: formData.height,
+          body_type: formData.bodyType,
+          skin_tone: formData.skinTone,
+          hair_color: formData.hairColor,
+          preferred_colors: formData.preferredColors,
+          preferred_styles: formData.preferredStyles,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
+        });
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been saved successfully.",
+      });
+      
+      navigate("/wardrobe");
+    } catch (error: any) {
+      toast({
+        title: "Error saving profile",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   const formSteps = [
-    // Step 1: Basic Info
     <motion.div
       key="step1"
       className="space-y-6"
@@ -84,7 +168,6 @@ const ProfileForm = () => {
       </motion.div>
     </motion.div>,
     
-    // Step 2: Body Type
     <motion.div
       key="step2"
       className="space-y-6"
@@ -120,7 +203,6 @@ const ProfileForm = () => {
       </motion.div>
     </motion.div>,
     
-    // Step 3: Colors
     <motion.div
       key="step3"
       className="space-y-6"
@@ -175,7 +257,6 @@ const ProfileForm = () => {
       </motion.div>
     </motion.div>,
     
-    // Step 4: Style Preferences
     <motion.div
       key="step4"
       className="space-y-6"
@@ -233,15 +314,19 @@ const ProfileForm = () => {
       
       <div className="mt-8 flex justify-between">
         {currentStep > 0 ? (
-          <Button variant="outline" onClick={handleBack}>
+          <Button variant="outline" onClick={handleBack} disabled={isSubmitting}>
             Back
           </Button>
         ) : (
           <div />
         )}
         
-        <Button onClick={handleNext}>
-          {currentStep < 3 ? "Next" : "Complete Profile"}
+        <Button onClick={handleNext} disabled={isSubmitting}>
+          {isSubmitting 
+            ? "Saving..." 
+            : currentStep < 3 
+              ? "Next" 
+              : "Complete Profile"}
         </Button>
       </div>
     </div>
