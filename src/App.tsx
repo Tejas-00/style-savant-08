@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +16,7 @@ import Recommendations from "./pages/Recommendations";
 import CameraView from "./pages/CameraView";
 import NotFound from "./pages/NotFound";
 
+// Create a new QueryClient instance outside of component
 const queryClient = new QueryClient();
 
 // Protected route component
@@ -47,6 +49,7 @@ const RedirectIfLoggedIn = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Separate the routes to avoid nesting contexts inside conditional rendering
 const AppRoutes = () => (
   <AnimatePresence mode="wait">
     <Routes>
@@ -62,18 +65,23 @@ const AppRoutes = () => (
   </AnimatePresence>
 );
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
+// Main App component with properly nested providers
+const App = () => {
+  return (
+    <React.StrictMode>
       <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <AuthProvider>
+              <Toaster />
+              <Sonner />
+              <AppRoutes />
+            </AuthProvider>
+          </TooltipProvider>
+        </QueryClientProvider>
       </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </React.StrictMode>
+  );
+};
 
 export default App;
