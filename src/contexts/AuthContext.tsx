@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -73,7 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -85,9 +87,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) throw error;
       
+      // Check if email confirmation is required
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        toast({
+          title: "Email already exists",
+          description: "Please sign in instead or use a different email.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       toast({
         title: "Account created",
-        description: "Please check your email to confirm your account.",
+        description: "For development purposes, you may need to disable email confirmation in Supabase settings.",
       });
       
       navigate("/onboarding");
