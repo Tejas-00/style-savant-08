@@ -63,17 +63,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (error) {
-        // Check for email confirmation error specifically
-        if (error.message.includes("Email not confirmed")) {
-          toast({
-            title: "Email not confirmed",
-            description: "Please check your email to confirm your account or contact support. For development, you can disable email confirmation in Supabase settings.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-        return;
+        // Email confirmation check is now commented out
+        // if (error.message.includes("Email not confirmed")) {
+        //   toast({
+        //     title: "Email not confirmed",
+        //     description: "Please check your email to confirm your account or contact support. For development, you can disable email confirmation in Supabase settings.",
+        //     variant: "destructive",
+        //   });
+        //   return;
+        // }
+        throw error;
       }
       
       navigate("/wardrobe");
@@ -100,7 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) throw error;
       
-      // Check if email confirmation is required
+      // Check if email already exists
       if (data.user && data.user.identities && data.user.identities.length === 0) {
         toast({
           title: "Email already exists",
@@ -110,20 +109,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
-      if (data.session) {
-        // If session is available, the user is automatically signed in (email confirmation is disabled)
-        toast({
-          title: "Account created",
-          description: "Your account has been created successfully!",
-        });
-        navigate("/onboarding");
-      } else {
-        // No session means email confirmation is required
-        toast({
-          title: "Account created",
-          description: "Please check your email to confirm your account. For development purposes, you may want to disable email confirmation in Supabase settings.",
-        });
-      }
+      // Email confirmation check is now bypassed - always redirect to onboarding
+      toast({
+        title: "Account created",
+        description: "Your account has been created successfully!",
+      });
+      navigate("/onboarding");
+      
+      // Previous conditional code is commented out
+      // if (data.session) {
+      //   // If session is available, the user is automatically signed in (email confirmation is disabled)
+      //   toast({
+      //     title: "Account created",
+      //     description: "Your account has been created successfully!",
+      //   });
+      //   navigate("/onboarding");
+      // } else {
+      //   // No session means email confirmation is required
+      //   toast({
+      //     title: "Account created",
+      //     description: "Please check your email to confirm your account. For development purposes, you may want to disable email confirmation in Supabase settings.",
+      //   });
+      // }
     } catch (error: any) {
       toast({
         title: "Error signing up",
