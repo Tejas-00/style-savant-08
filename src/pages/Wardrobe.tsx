@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Filter, Loader2 } from "lucide-react";
+import { Plus, Filter, Loader2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Tabs, 
@@ -18,6 +18,50 @@ import { pageTransition, staggerContainer, staggerItem } from "@/utils/animation
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ClothingItem as ClothingItemType } from "@/utils/recommendations";
+
+// Define clothing style recommendations for each category
+const styleRecommendations = {
+  all: [
+    { name: "Casual", description: "Everyday comfortable clothing for a relaxed look" },
+    { name: "Formal", description: "Professional attire for business and special occasions" },
+    { name: "Athleisure", description: "Athletic-inspired clothing that's comfortable and stylish" },
+    { name: "Vintage", description: "Classic styles from previous decades with timeless appeal" }
+  ],
+  top: [
+    { name: "Button-Down Shirts", description: "Versatile shirts for casual and formal settings" },
+    { name: "T-Shirts", description: "Comfortable basics in various colors and patterns" },
+    { name: "Sweaters", description: "Warm and cozy options for cooler weather" },
+    { name: "Blouses", description: "Elegant tops with various designs and fabrics" }
+  ],
+  bottom: [
+    { name: "Jeans", description: "Classic denim in various cuts and washes" },
+    { name: "Slacks", description: "Professional pants for work and formal occasions" },
+    { name: "Shorts", description: "Casual options for warm weather" },
+    { name: "Skirts", description: "Versatile pieces in various lengths and styles" }
+  ],
+  outerwear: [
+    { name: "Jackets", description: "Lightweight protection for mild weather" },
+    { name: "Coats", description: "Warm options for colder temperatures" },
+    { name: "Blazers", description: "Structured pieces to elevate casual outfits" },
+    { name: "Cardigans", description: "Versatile layering pieces for any season" }
+  ],
+  shoes: [
+    { name: "Sneakers", description: "Comfortable footwear for casual and active wear" },
+    { name: "Dress Shoes", description: "Elegant options for formal occasions" },
+    { name: "Boots", description: "Stylish protection for various weather conditions" },
+    { name: "Sandals", description: "Breathable options for warm weather" }
+  ]
+};
+
+const StyleRecommendation = ({ name, description }: { name: string; description: string }) => (
+  <motion.div 
+    variants={staggerItem}
+    className="bg-card p-4 rounded-lg border border-border shadow-sm hover:shadow-md transition-all"
+  >
+    <h3 className="font-medium mb-2">{name}</h3>
+    <p className="text-sm text-muted-foreground">{description}</p>
+  </motion.div>
+);
 
 const Wardrobe = () => {
   const navigate = useNavigate();
@@ -164,12 +208,38 @@ const Wardrobe = () => {
                       </motion.div>
                     ))
                   ) : (
-                    <div className="col-span-2 py-16 text-center">
-                      <p className="text-muted-foreground">No items found in this category</p>
-                      <Button variant="outline" className="mt-4" onClick={goToCamera}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Item
-                      </Button>
+                    <div className="col-span-2">
+                      <div className="py-6 px-4 text-center bg-muted/20 rounded-lg mb-6">
+                        <Info className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <h3 className="text-lg font-medium mb-1">No items found</h3>
+                        <p className="text-muted-foreground mb-4">Add items to see them in your wardrobe</p>
+                        <Button variant="outline" className="mt-2" onClick={goToCamera}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Item
+                        </Button>
+                      </div>
+                      
+                      <div className="mt-8">
+                        <h2 className="text-lg font-medium mb-4 flex items-center">
+                          <Info className="h-4 w-4 mr-2 text-primary" />
+                          {category === "all" ? "Popular Clothing Styles" : `${category.charAt(0).toUpperCase() + category.slice(1)} Style Ideas`}
+                        </h2>
+                        
+                        <motion.div 
+                          variants={staggerContainer}
+                          initial="initial"
+                          animate="animate"
+                          className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4"
+                        >
+                          {styleRecommendations[category as keyof typeof styleRecommendations].map((style, index) => (
+                            <StyleRecommendation 
+                              key={index} 
+                              name={style.name} 
+                              description={style.description} 
+                            />
+                          ))}
+                        </motion.div>
+                      </div>
                     </div>
                   )}
                 </motion.div>
