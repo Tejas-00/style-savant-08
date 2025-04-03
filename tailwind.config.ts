@@ -173,6 +173,52 @@ export default {
                         transform: 'scale(1)',
                         opacity: '1'
                     }
+                },
+                'bounce-in': {
+                    '0%': { 
+                        transform: 'scale(0.8)',
+                        opacity: '0'
+                    },
+                    '60%': { 
+                        transform: 'scale(1.05)',
+                        opacity: '0.8'
+                    },
+                    '100%': { 
+                        transform: 'scale(1)',
+                        opacity: '1'
+                    }
+                },
+                'float': {
+                    '0%, 100%': { 
+                        transform: 'translateY(0)' 
+                    },
+                    '50%': { 
+                        transform: 'translateY(-10px)' 
+                    }
+                },
+                'pulse-subtle': {
+                    '0%, 100%': { 
+                        transform: 'scale(1)' 
+                    },
+                    '50%': { 
+                        transform: 'scale(1.03)' 
+                    }
+                },
+                'spin-slow': {
+                    '0%': { 
+                        transform: 'rotate(0deg)' 
+                    },
+                    '100%': { 
+                        transform: 'rotate(360deg)' 
+                    }
+                },
+                'shimmer': {
+                    '0%': { 
+                        backgroundPosition: '-500px 0' 
+                    },
+                    '100%': { 
+                        backgroundPosition: '500px 0' 
+                    }
                 }
 			},
 			animation: {
@@ -182,8 +228,27 @@ export default {
                 'fade-out': 'fade-out 0.5s ease-out forwards',
                 'slide-up': 'slide-up 0.6s ease-out forwards',
                 'slide-down': 'slide-down 0.6s ease-out forwards',
-                'scale-in': 'scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards'
-			}
+                'scale-in': 'scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                'bounce-in': 'bounce-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                'float': 'float 3s ease-in-out infinite',
+                'pulse-subtle': 'pulse-subtle 3s ease-in-out infinite',
+                'spin-slow': 'spin-slow 8s linear infinite',
+                'shimmer': 'shimmer 2s infinite linear'
+			},
+            transitionDuration: {
+                '2000': '2000ms',
+                '3000': '3000ms'
+            },
+            transitionTimingFunction: {
+                'bounce': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                'in-out-soft': 'cubic-bezier(0.4, 0, 0.2, 1)',
+                'out-back': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+            },
+            backgroundImage: {
+                'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                'gradient-subtle': 'linear-gradient(to right, var(--tw-gradient-stops))',
+                'shimmer': 'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)'
+            }
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
