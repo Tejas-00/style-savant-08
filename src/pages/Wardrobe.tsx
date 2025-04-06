@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -437,19 +436,16 @@ const getAllClothingRecommendations = (category: string) => {
   
   Object.keys(clothingRecommendations).forEach(bodyType => {
     if (category === 'all') {
-      // For 'all' category, collect items from all categories
       ['top', 'bottom', 'outerwear', 'shoes'].forEach(cat => {
         if (clothingRecommendations[bodyType as keyof typeof clothingRecommendations][cat as keyof {}]) {
           allItems.push(...(clothingRecommendations[bodyType as keyof typeof clothingRecommendations][cat as keyof {}] as ClothingItemType[]));
         }
       });
     } else if (clothingRecommendations[bodyType as keyof typeof clothingRecommendations][category as keyof {}]) {
-      // For specific category, just collect those items
       allItems.push(...(clothingRecommendations[bodyType as keyof typeof clothingRecommendations][category as keyof {}] as ClothingItemType[]));
     }
   });
   
-  // Limit to 4 items to avoid overwhelming the UI
   return allItems.slice(0, 4);
 };
 
@@ -487,7 +483,6 @@ const Wardrobe = () => {
           throw error;
         }
         
-        // Transform the data to match our ClothingItemType
         const items: ClothingItemType[] = data.map(item => ({
           id: item.id,
           name: item.name,
@@ -521,7 +516,7 @@ const Wardrobe = () => {
           .single();
           
         if (error) {
-          if (error.code !== 'PGRST116') { // PGRST116 is the error code for "no rows returned"
+          if (error.code !== 'PGRST116') {
             throw error;
           }
           return;
@@ -541,7 +536,6 @@ const Wardrobe = () => {
     fetchUserProfile();
   }, [user, toast]);
   
-  // Filter clothes by category
   const filterClothes = (category: string) => {
     if (category === "all") {
       return wardrobeItems;
@@ -549,29 +543,24 @@ const Wardrobe = () => {
     return wardrobeItems.filter(item => item.category === category);
   };
   
-  // Get personalized recommendations based on user profile
   const getPersonalizedRecommendations = (category: string) => {
     if (!userProfile) {
       return personalizedRecommendations.default[category as keyof typeof personalizedRecommendations.default] || 
         styleRecommendations[category as keyof typeof styleRecommendations];
     }
     
-    // Use body type to determine recommendations
     const bodyType = userProfile.body_type || 'default';
     
     if (category === 'all') {
-      // For "all" category, combine recommendations from other categories
       return personalizedRecommendations[bodyType as keyof typeof personalizedRecommendations]?.all || 
         personalizedRecommendations.default.all;
     }
     
-    // Return recommendations for specific category based on body type
     return personalizedRecommendations[bodyType as keyof typeof personalizedRecommendations]?.[category as keyof {}] || 
       personalizedRecommendations.default[category as keyof typeof personalizedRecommendations.default] || 
       styleRecommendations[category as keyof typeof styleRecommendations];
   };
   
-  // Get clothing items from recommendations based on user profile
   const getRecommendedClothingItems = (category: string): ClothingItemType[] => {
     if (!userProfile) {
       return category === 'all' 
@@ -582,11 +571,9 @@ const Wardrobe = () => {
     const bodyType = userProfile.body_type || 'default';
     
     if (category === 'all') {
-      // Get a mix of items for all categories
       return getAllClothingRecommendations('all');
     }
     
-    // Get items for the specific category and body type
     return clothingRecommendations[bodyType as keyof typeof clothingRecommendations]?.[category as keyof {}] as ClothingItemType[] ||
            clothingRecommendations.default[category as keyof typeof clothingRecommendations.default] as ClothingItemType[] || [];
   };
@@ -604,7 +591,6 @@ const Wardrobe = () => {
         
       if (error) throw error;
       
-      // Update state after successful deletion
       setWardrobeItems(prev => prev.filter(item => item.id !== id));
       
       toast({
@@ -690,7 +676,6 @@ const Wardrobe = () => {
                         </Button>
                       </div>
                       
-                      {/* Display recommended clothing items */}
                       <div className="mt-6">
                         <h2 className="text-lg font-medium mb-4 flex items-center">
                           <Info className="h-4 w-4 mr-2 text-primary" />
@@ -714,7 +699,6 @@ const Wardrobe = () => {
                         </motion.div>
                       </div>
                       
-                      {/* Style recommendations section */}
                       <div className="mt-8">
                         <h2 className="text-lg font-medium mb-4 flex items-center">
                           <Info className="h-4 w-4 mr-2 text-primary" />
