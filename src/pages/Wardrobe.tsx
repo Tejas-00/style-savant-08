@@ -53,12 +53,71 @@ const styleRecommendations = {
   ]
 };
 
-const StyleRecommendation = ({ name, description }: { name: string; description: string }) => (
+// Sample recommendations based on body type, style, etc.
+const personalizedRecommendations = {
+  athletic: {
+    top: [
+      { name: "Fitted T-shirts", description: "Highlight your athletic build with fitted tees in solid colors" },
+      { name: "V-neck shirts", description: "Elongate your neck and showcase your athletic frame" }
+    ],
+    bottom: [
+      { name: "Slim-fit jeans", description: "Show off your athletic legs with slim-fit jeans" },
+      { name: "Tapered pants", description: "Provide a sleek silhouette for athletic body types" }
+    ],
+    outerwear: [
+      { name: "Bomber jackets", description: "Complement athletic builds with this structured style" },
+      { name: "Fitted blazers", description: "Highlight your shoulders and provide a polished look" }
+    ],
+    shoes: [
+      { name: "Low-top sneakers", description: "Versatile option that works well with athletic builds" },
+      { name: "Chelsea boots", description: "Sleek boots that complement athletic frames" }
+    ]
+  },
+  slim: {
+    top: [
+      { name: "Layered tops", description: "Add dimension to your frame with layered looks" },
+      { name: "Horizontal stripes", description: "Create the illusion of width for slim frames" }
+    ],
+    bottom: [
+      { name: "Straight-leg pants", description: "Balance your proportions with a straight-leg cut" },
+      { name: "Textured fabrics", description: "Add visual interest and dimension to your look" }
+    ],
+    outerwear: [
+      { name: "Chunky knit cardigans", description: "Add bulk to slim frames in a stylish way" },
+      { name: "Oversized jackets", description: "Create contrast with your slim frame for a modern look" }
+    ],
+    shoes: [
+      { name: "Chunky sneakers", description: "Balance slim frames with chunkier footwear" },
+      { name: "Combat boots", description: "Add weight to your lower half for balanced proportions" }
+    ]
+  },
+  // Add more body types as needed
+  default: {
+    top: [
+      { name: "Classic button-downs", description: "Versatile staples that work for everyone" },
+      { name: "Quality t-shirts", description: "Essential basics in neutral colors" }
+    ],
+    bottom: [
+      { name: "Dark wash jeans", description: "Flattering and versatile for all body types" },
+      { name: "Tailored trousers", description: "Polished option that suits everyone" }
+    ],
+    outerwear: [
+      { name: "Classic trench coat", description: "Timeless outerwear that flatters all figures" },
+      { name: "Denim jacket", description: "Versatile layer that works year-round" }
+    ],
+    shoes: [
+      { name: "White sneakers", description: "Clean, versatile footwear that goes with everything" },
+      { name: "Loafers", description: "Comfortable yet polished shoes for various occasions" }
+    ]
+  }
+};
+
+const RecommendedItem = ({ name, description }: { name: string; description: string }) => (
   <motion.div 
     variants={staggerItem}
     className="bg-card p-4 rounded-lg border border-border shadow-sm hover:shadow-md transition-all"
   >
-    <h3 className="font-medium mb-2">{name}</h3>
+    <h3 className="font-medium mb-1">{name}</h3>
     <p className="text-sm text-muted-foreground">{description}</p>
   </motion.div>
 );
@@ -70,6 +129,7 @@ const Wardrobe = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [wardrobeItems, setWardrobeItems] = useState<ClothingItemType[]>([]);
+  const [userProfile, setUserProfile] = useState<any>(null);
   
   useEffect(() => {
     if (!user) return;
@@ -111,7 +171,33 @@ const Wardrobe = () => {
       }
     };
     
+    const fetchUserProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) {
+          if (error.code !== 'PGRST116') { // PGRST116 is the error code for "no rows returned"
+            throw error;
+          }
+          return;
+        }
+        
+        setUserProfile(data);
+      } catch (error: any) {
+        toast({
+          title: "Error fetching profile",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    };
+    
     fetchWardrobeItems();
+    fetchUserProfile();
   }, [user, toast]);
   
   // Filter clothes by category
@@ -120,6 +206,33 @@ const Wardrobe = () => {
       return wardrobeItems;
     }
     return wardrobeItems.filter(item => item.category === category);
+  };
+  
+  // Get personalized recommendations based on user profile
+  const getPersonalizedRecommendations = (category: string) => {
+    if (!userProfile) {
+      return personalizedRecommendations.default[category as keyof typeof personalizedRecommendations.default] || 
+        styleRecommendations[category as keyof typeof styleRecommendations];
+    }
+    
+    // Use body type to determine recommendations
+    const bodyType = userProfile.body_type || 'default';
+    
+    if (category === 'all') {
+      // For "all" category, combine recommendations from other categories
+      const allRecs = [];
+      for (const cat of ['top', 'bottom', 'outerwear', 'shoes']) {
+        if (personalizedRecommendations[bodyType as keyof typeof personalizedRecommendations]?.[cat as keyof {}]) {
+          allRecs.push(...(personalizedRecommendations[bodyType as keyof typeof personalizedRecommendations][cat as keyof {}] as any[]));
+        }
+      }
+      return allRecs.length > 0 ? allRecs.slice(0, 4) : styleRecommendations.all;
+    }
+    
+    // Return recommendations for specific category based on body type
+    return personalizedRecommendations[bodyType as keyof typeof personalizedRecommendations]?.[category as keyof {}] || 
+      personalizedRecommendations.default[category as keyof typeof personalizedRecommendations.default] || 
+      styleRecommendations[category as keyof typeof styleRecommendations];
   };
   
   const goToCamera = () => {
@@ -210,19 +323,23 @@ const Wardrobe = () => {
                   ) : (
                     <div className="col-span-2">
                       <div className="py-6 px-4 text-center bg-muted/20 rounded-lg mb-6">
-                        <Info className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                        <h3 className="text-lg font-medium mb-1">No items found</h3>
-                        <p className="text-muted-foreground mb-4">Add items to see them in your wardrobe</p>
+                        <Info className="h-8 w-8 mx-auto text-primary mb-2" />
+                        <h3 className="text-lg font-medium mb-1">Recommended for You</h3>
+                        <p className="text-muted-foreground mb-4">
+                          Based on your profile, these items would be perfect for your wardrobe
+                        </p>
                         <Button variant="outline" className="mt-2" onClick={goToCamera}>
                           <Plus className="h-4 w-4 mr-2" />
                           Add Item
                         </Button>
                       </div>
                       
-                      <div className="mt-8">
+                      <div className="mt-6">
                         <h2 className="text-lg font-medium mb-4 flex items-center">
                           <Info className="h-4 w-4 mr-2 text-primary" />
-                          {category === "all" ? "Popular Clothing Styles" : `${category.charAt(0).toUpperCase() + category.slice(1)} Style Ideas`}
+                          {category === "all" 
+                            ? "Recommended Styles for You" 
+                            : `Recommended ${category.charAt(0).toUpperCase() + category.slice(1)}s for You`}
                         </h2>
                         
                         <motion.div 
@@ -231,8 +348,8 @@ const Wardrobe = () => {
                           animate="animate"
                           className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4"
                         >
-                          {styleRecommendations[category as keyof typeof styleRecommendations].map((style, index) => (
-                            <StyleRecommendation 
+                          {getPersonalizedRecommendations(category).map((style: any, index: number) => (
+                            <RecommendedItem 
                               key={index} 
                               name={style.name} 
                               description={style.description} 
