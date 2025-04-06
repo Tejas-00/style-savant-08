@@ -173,3 +173,103 @@ export function generateRecommendations(
   
   return outfits;
 }
+
+// Define personalized style recommendations based on body type
+export const personalizedRecommendations = {
+  athletic: {
+    all: [
+      { name: "Athletic Casual", description: "Emphasize your athletic build with well-fitted casual wear" },
+      { name: "Smart Fit", description: "Structured clothing that highlights your proportions" },
+      { name: "Active Minimalist", description: "Clean lines and simple patterns for an effortless look" },
+      { name: "Classic Athletic", description: "Timeless pieces that complement your athletic frame" }
+    ],
+    top: [
+      { name: "Fitted Polos", description: "Showcase your athletic build with tailored polos" },
+      { name: "V-Neck Tees", description: "Flattering neckline that broadens shoulders" },
+      { name: "Structured Shirts", description: "Tailored fit to accentuate your physique" },
+      { name: "Athletic-Cut Henleys", description: "Room in the shoulders with a tapered waist" }
+    ],
+    bottom: [
+      { name: "Athletic-Fit Jeans", description: "Room in thighs with tapered legs for athletic builds" },
+      { name: "Performance Chinos", description: "Flexible materials with a clean-cut look" },
+      { name: "Straight-Leg Pants", description: "Balanced proportions for muscular legs" },
+      { name: "Tailored Shorts", description: "Well-fitted shorts that hit just above the knee" }
+    ],
+    outerwear: [
+      { name: "Bomber Jackets", description: "Emphasize shoulders while tapering at the waist" },
+      { name: "Sport Coats", description: "Structured fit to showcase athletic proportions" },
+      { name: "Fitted Hoodies", description: "Athletic cut that follows body lines" },
+      { name: "Performance Jackets", description: "Technical fabrics with a tailored silhouette" }
+    ],
+    shoes: [
+      { name: "Streamlined Sneakers", description: "Clean design to balance athletic proportions" },
+      { name: "Leather Boots", description: "Substantial footwear to complement a stronger frame" },
+      { name: "Athletic Dress Shoes", description: "Refined options with comfort for active lifestyles" },
+      { name: "Performance Loafers", description: "Traditional style with modern comfort technologies" }
+    ]
+  },
+  slim: {
+    all: [
+      { name: "Layered Casual", description: "Add dimension with strategic layering techniques" },
+      { name: "Slim-Fit Classic", description: "Traditional styles cut for a leaner frame" },
+      { name: "Textured Minimal", description: "Create visual interest with subtle textures" },
+      { name: "Modern Slim", description: "Contemporary pieces that enhance your streamlined silhouette" }
+    ],
+    top: [
+      { name: "Slim-Cut Button-Ups", description: "Tailored fit without excess fabric" },
+      { name: "Textured Sweaters", description: "Add visual dimension to your upper body" },
+      { name: "Horizontal Stripes", description: "Create the illusion of width across the chest" },
+      { name: "Layered Lightweight Tops", description: "Build dimension without bulk" }
+    ],
+    bottom: [
+      { name: "Slim Straight Jeans", description: "Clean lines without being too skinny" },
+      { name: "Tapered Chinos", description: "Modern cut that follows the leg line" },
+      { name: "Textured Pants", description: "Materials like corduroy add visual weight" },
+      { name: "Slim-Cut Shorts", description: "Well-proportioned shorts for leaner builds" }
+    ],
+    outerwear: [
+      { name: "Structured Jackets", description: "Add shape and definition to your silhouette" },
+      { name: "Chunky Cardigans", description: "Create volume in a flattering way" },
+      { name: "Pea Coats", description: "Classic outerwear that adds structure to slim frames" },
+      { name: "Layered Lightweight Jackets", description: "Build dimension without overwhelming your frame" }
+    ],
+    shoes: [
+      { name: "Medium-Profile Sneakers", description: "Balanced footwear for slim proportions" },
+      { name: "Chelsea Boots", description: "Sleek boots that elongate the leg line" },
+      { name: "Loafers with Texture", description: "Visual interest without overwhelming your frame" },
+      { name: "Minimalist Dress Shoes", description: "Clean lines that complement slim proportions" }
+    ]
+  },
+  default: {
+    all: [
+      { name: "Versatile Casual", description: "Adaptable styles that work for most body types" },
+      { name: "Modern Classic", description: "Updated timeless pieces with universal appeal" },
+      { name: "Balanced Smart Casual", description: "Well-proportioned clothing for everyday wear" },
+      { name: "Accessible Trending", description: "Current styles adapted to suit various builds" }
+    ],
+    top: [
+      { name: "Button-Down Shirts", description: "Versatile shirts for casual and formal settings" },
+      { name: "T-Shirts", description: "Comfortable basics in various colors and patterns" },
+      { name: "Sweaters", description: "Warm and cozy options for cooler weather" },
+      { name: "Blouses", description: "Elegant tops with various designs and fabrics" }
+    ],
+    bottom: [
+      { name: "Jeans", description: "Classic denim in various cuts and washes" },
+      { name: "Slacks", description: "Professional pants for work and formal occasions" },
+      { name: "Shorts", description: "Casual options for warm weather" },
+      { name: "Skirts", description: "Versatile pieces in various lengths and styles" }
+    ],
+    outerwear: [
+      { name: "Jackets", description: "Lightweight protection for mild weather" },
+      { name: "Coats", description: "Warm options for colder temperatures" },
+      { name: "Blazers", description: "Structured pieces to elevate casual outfits" },
+      { name: "Cardigans", description: "Versatile layering pieces for any season" }
+    ],
+    shoes: [
+      { name: "Sneakers", description: "Comfortable footwear for casual and active wear" },
+      { name: "Dress Shoes", description: "Elegant options for formal occasions" },
+      { name: "Boots", description: "Stylish protection for various weather conditions" },
+      { name: "Sandals", description: "Breathable options for warm weather" }
+    ]
+  }
+};
