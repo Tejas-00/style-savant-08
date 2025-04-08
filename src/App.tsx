@@ -75,7 +75,9 @@ const App = () => {
             <AuthProvider>
               <Toaster />
               <Sonner />
-              <AppRoutes />
+              <div className="max-w-md mx-auto h-full min-h-svh">
+                <AppRoutes />
+              </div>
             </AuthProvider>
           </TooltipProvider>
         </QueryClientProvider>

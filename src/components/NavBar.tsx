@@ -2,11 +2,13 @@
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, Shirt, Camera, Lightbulb } from "lucide-react";
+import { Home, Shirt, Camera, Lightbulb, User } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const NavBar = () => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const isMobile = useIsMobile();
   
   const navItems = [
     {
@@ -28,6 +30,11 @@ const NavBar = () => {
       label: "Outfits",
       icon: <Lightbulb className="w-5 h-5" />,
       path: "/recommendations"
+    },
+    {
+      label: "Profile",
+      icon: <User className="w-5 h-5" />,
+      path: "/onboarding"
     }
   ];
   
@@ -44,7 +51,7 @@ const NavBar = () => {
             key={item.path}
             to={item.path}
             className={cn(
-              "flex flex-col items-center justify-center py-2 px-4 rounded-lg transition-colors",
+              "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors",
               currentPath === item.path
                 ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"

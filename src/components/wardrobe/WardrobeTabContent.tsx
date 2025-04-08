@@ -4,6 +4,7 @@ import { ClothingItem as ClothingItemType } from "@/utils/recommendations";
 import ClothingItem from "@/components/ClothingItem";
 import EmptyWardrobeState from "@/components/wardrobe/EmptyWardrobeState";
 import { staggerContainer, staggerItem } from "@/utils/animations";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface WardrobeTabContentProps {
   category: string;
@@ -24,6 +25,8 @@ const WardrobeTabContent = ({
   goToCamera,
   onDeleteItem
 }: WardrobeTabContentProps) => {
+  const isMobile = useIsMobile();
+  
   if (items.length === 0) {
     return (
       <EmptyWardrobeState
@@ -41,7 +44,7 @@ const WardrobeTabContent = ({
       initial="initial"
       animate="animate"
       exit="exit"
-      className="grid grid-cols-2 gap-4"
+      className={`grid gap-3 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}
     >
       {items.map((item) => (
         <motion.div key={item.id} variants={staggerItem}>
