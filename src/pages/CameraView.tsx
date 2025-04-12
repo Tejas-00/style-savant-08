@@ -4,9 +4,11 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import CameraOverlay from "@/components/CameraOverlay";
 import { pageTransition } from "@/utils/animations";
+import { useToast } from "@/components/ui/use-toast";
 
 const CameraView = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
@@ -72,11 +74,14 @@ const CameraView = () => {
     // Convert to base64
     const imageData = canvas.toDataURL("image/jpeg");
     
-    // Here you would normally process the image or send it to an API
-    console.log("Image captured:", imageData.substring(0, 100) + "...");
+    // With wardrobe feature removed, we just show a notification and navigate to recommendations
+    toast({
+      title: "Photo captured",
+      description: "Image processing would be handled here in a full implementation.",
+    });
     
-    // Navigate back to the wardrobe with the image data
-    navigate("/wardrobe");
+    // Navigate to recommendations instead of wardrobe
+    navigate("/recommendations");
   };
   
   // Handle cancel
@@ -94,7 +99,7 @@ const CameraView = () => {
         <div className="flex flex-col items-center justify-center h-full text-white p-6 text-center">
           <h2 className="text-2xl font-bold mb-4">Camera Access Denied</h2>
           <p className="mb-6">
-            We need camera access to analyze your facial features for better recommendations.
+            We need camera access to take photos for outfit recommendations.
           </p>
           <button 
             onClick={initializeCamera}

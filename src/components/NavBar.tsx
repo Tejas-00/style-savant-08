@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, Shirt, Camera, Lightbulb, User } from "lucide-react";
+import { Home, Camera, Lightbulb, User } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const NavBar = () => {
@@ -15,11 +15,6 @@ const NavBar = () => {
       label: "Home",
       icon: <Home className="w-5 h-5" />,
       path: "/"
-    },
-    {
-      label: "Wardrobe",
-      icon: <Shirt className="w-5 h-5" />,
-      path: "/wardrobe"
     },
     {
       label: "Camera",

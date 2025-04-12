@@ -11,7 +11,6 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
-import Wardrobe from "./pages/Wardrobe";
 import Recommendations from "./pages/Recommendations";
 import CameraView from "./pages/CameraView";
 import NotFound from "./pages/NotFound";
@@ -34,7 +33,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Redirect to wardrobe if user is logged in
+// Redirect to recommendations if user is logged in
 const RedirectIfLoggedIn = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
@@ -43,7 +42,7 @@ const RedirectIfLoggedIn = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (user) {
-    return <Navigate to="/wardrobe" replace />;
+    return <Navigate to="/recommendations" replace />;
   }
   
   return <>{children}</>;
@@ -56,7 +55,6 @@ const AppRoutes = () => (
       <Route path="/" element={<RedirectIfLoggedIn><Index /></RedirectIfLoggedIn>} />
       <Route path="/auth" element={<RedirectIfLoggedIn><Auth /></RedirectIfLoggedIn>} />
       <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-      <Route path="/wardrobe" element={<ProtectedRoute><Wardrobe /></ProtectedRoute>} />
       <Route path="/recommendations" element={<ProtectedRoute><Recommendations /></ProtectedRoute>} />
       <Route path="/camera" element={<ProtectedRoute><CameraView /></ProtectedRoute>} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
