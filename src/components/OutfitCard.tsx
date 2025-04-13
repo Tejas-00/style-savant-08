@@ -1,8 +1,9 @@
 
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { Outfit } from "@/utils/recommendations";
 import { cn } from "@/lib/utils";
-import { Check, ThumbsUp, ThumbsDown, BookmarkCheck } from "lucide-react";
+import { Check, ThumbsUp, ThumbsDown, BookmarkCheck, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -21,13 +22,38 @@ const OutfitCard: React.FC<OutfitCardProps> = ({
   onDislike, 
   onSave 
 }) => {
+  const [liked, setLiked] = useState(false);
+  const [disliked, setDisliked] = useState(false);
+  const [saved, setSaved] = useState(false);
+  
+  const handleLike = () => {
+    if (!liked) {
+      setLiked(true);
+      setDisliked(false);
+      if (onLike) onLike();
+    }
+  };
+  
+  const handleDislike = () => {
+    if (!disliked) {
+      setDisliked(true);
+      setLiked(false);
+      if (onDislike) onDislike();
+    }
+  };
+  
+  const handleSave = () => {
+    setSaved(!saved);
+    if (onSave) onSave();
+  };
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       className={cn(
-        "rounded-xl overflow-hidden bg-card border border-border",
+        "rounded-xl overflow-hidden bg-card border border-border shadow-sm",
         className
       )}
     >
@@ -37,15 +63,20 @@ const OutfitCard: React.FC<OutfitCardProps> = ({
             <Badge className="mb-2" variant="outline">
               {outfit.occasion}
             </Badge>
+            {outfit.style && (
+              <Badge className="mb-2 ml-2" variant="secondary">
+                {outfit.style}
+              </Badge>
+            )}
             <h3 className="text-lg font-medium">
-              {outfit.occasion === "casual" ? "Casual Look" : "Smart Casual Outfit"}
+              {outfit.name || (outfit.occasion === "casual" ? "Casual Look" : "Smart Casual Outfit")}
             </h3>
             <p className="text-sm text-muted-foreground">
               Perfect for {outfit.occasion}, {outfit.weather} weather
             </p>
           </div>
           <Badge 
-            variant="secondary" 
+            variant={outfit.confidence > 0.8 ? "default" : "secondary"} 
             className="flex items-center gap-1"
           >
             <Check className="h-3 w-3" />
@@ -64,7 +95,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({
                 alt={item.name} 
                 className="w-full h-full object-cover transition-transform group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-90" />
               <div className="absolute bottom-2 left-2 right-2">
                 <h4 className="text-xs font-medium text-white truncate">
                   {item.name}
@@ -81,18 +112,24 @@ const OutfitCard: React.FC<OutfitCardProps> = ({
           <div className="flex gap-2">
             <Button 
               size="sm" 
-              variant="outline" 
-              className="flex items-center gap-1"
-              onClick={onLike}
+              variant={liked ? "default" : "outline"} 
+              className={cn(
+                "flex items-center gap-1",
+                liked && "bg-green-500 hover:bg-green-600"
+              )}
+              onClick={handleLike}
             >
               <ThumbsUp className="h-4 w-4" />
               <span className="sr-md:not-sr-only sr-only">Like</span>
             </Button>
             <Button 
               size="sm" 
-              variant="outline" 
-              className="flex items-center gap-1"
-              onClick={onDislike}
+              variant={disliked ? "default" : "outline"} 
+              className={cn(
+                "flex items-center gap-1",
+                disliked && "bg-red-500 hover:bg-red-600"
+              )}
+              onClick={handleDislike}
             >
               <ThumbsDown className="h-4 w-4" />
               <span className="sr-md:not-sr-only sr-only">Dislike</span>
@@ -100,11 +137,19 @@ const OutfitCard: React.FC<OutfitCardProps> = ({
           </div>
           <Button 
             size="sm" 
-            className="flex items-center gap-1"
-            onClick={onSave}
+            variant={saved ? "default" : "outline"}
+            className={cn(
+              "flex items-center gap-1",
+              saved && "bg-primary"
+            )}
+            onClick={handleSave}
           >
-            <BookmarkCheck className="h-4 w-4" />
-            <span>Save Outfit</span>
+            {saved ? (
+              <Heart className="h-4 w-4 fill-current" />
+            ) : (
+              <BookmarkCheck className="h-4 w-4" />
+            )}
+            <span>{saved ? "Saved" : "Save Outfit"}</span>
           </Button>
         </div>
       </div>

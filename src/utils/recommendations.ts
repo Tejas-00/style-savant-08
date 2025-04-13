@@ -35,12 +35,14 @@ export interface UserProfile {
 // Interface for outfit recommendations
 export interface Outfit {
   id: string;
+  name?: string;
   items: ClothingItem[];
   occasion: string;
   season: string;
   weather: string;
   confidence: number;
   style?: string;
+  tags?: string[];
 }
 
 // Mock user data
@@ -126,6 +128,50 @@ export const mockWardrobe: ClothingItem[] = [
     season: "summer",
     imageUrl: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=500",
   },
+  {
+    id: "item7",
+    name: "Black Denim Jacket",
+    category: "outerwear",
+    color: "black",
+    pattern: "solid",
+    style: "casual",
+    formality: "casual",
+    season: "fall",
+    imageUrl: "https://images.unsplash.com/photo-1592878904946-b3f8f15413cc?q=80&w=500",
+  },
+  {
+    id: "item8",
+    name: "White Sneakers",
+    category: "shoes",
+    color: "white",
+    pattern: "solid",
+    style: "casual",
+    formality: "casual",
+    season: "all",
+    imageUrl: "https://images.unsplash.com/photo-1597045566677-8cf032ed6634?q=80&w=500",
+  },
+  {
+    id: "item9",
+    name: "Gray Hoodie",
+    category: "top",
+    color: "gray",
+    pattern: "solid",
+    style: "casual",
+    formality: "casual",
+    season: "fall",
+    imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=500",
+  },
+  {
+    id: "item10",
+    name: "Khaki Chinos",
+    category: "bottom",
+    color: "khaki",
+    pattern: "solid",
+    style: "smart casual",
+    formality: "smart casual",
+    season: "all",
+    imageUrl: "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?q=80&w=500",
+  }
 ];
 
 // Enhanced algorithm to generate outfit recommendations
@@ -171,29 +217,96 @@ export function generateRecommendations(
     item.category === 'top' && 
     (item.formality === formality || 
      (formality === 'smart casual' && item.formality === 'casual') ||
-     (formality === 'formal' && item.formality === 'smart casual'))
+     (formality === 'formal' && item.formality === 'smart casual')) &&
+    (!style || style === 'all' || item.style === style)
   );
   
   const bottoms = seasonalItems.filter(item => 
     item.category === 'bottom' && 
     (item.formality === formality || 
      (formality === 'smart casual' && item.formality === 'casual') ||
-     (formality === 'formal' && item.formality === 'smart casual'))
+     (formality === 'formal' && item.formality === 'smart casual')) &&
+    (!style || style === 'all' || item.style === style)
   );
   
   const outerwears = seasonalItems.filter(item => 
     item.category === 'outerwear' && 
     (item.formality === formality || 
      (formality === 'smart casual' && item.formality === 'casual') ||
-     (formality === 'formal' && item.formality === 'smart casual'))
+     (formality === 'formal' && item.formality === 'smart casual')) &&
+    (!style || style === 'all' || item.style === style)
   );
   
   const shoes = seasonalItems.filter(item => 
     item.category === 'shoes' && 
     (item.formality === formality || 
      (formality === 'smart casual' && item.formality === 'casual') ||
-     (formality === 'formal' && item.formality === 'smart casual'))
+     (formality === 'formal' && item.formality === 'smart casual')) &&
+    (!style || style === 'all' || item.style === style)
   );
+  
+  const accessories = seasonalItems.filter(item => 
+    item.category === 'accessory' && 
+    (item.formality === formality || 
+     (formality === 'smart casual' && item.formality === 'casual') ||
+     (formality === 'formal' && item.formality === 'smart casual')) &&
+    (!style || style === 'all' || item.style === style)
+  );
+  
+  // Function to check color harmony
+  const checkColorHarmony = (items: ClothingItem[]): boolean => {
+    const colors = items.map(item => item.color.toLowerCase());
+    
+    // Neutral colors go with everything
+    const neutralColors = ['black', 'white', 'gray', 'navy', 'beige', 'khaki', 'charcoal', 'brown'];
+    
+    // Count non-neutral colors
+    const nonNeutralColors = colors.filter(color => 
+      !neutralColors.some(neutral => color.includes(neutral))
+    );
+    
+    // If there are more than 2 non-neutral colors, it might be too much
+    if (nonNeutralColors.length > 2) {
+      return false;
+    }
+    
+    return true;
+  };
+  
+  // Function to check style consistency
+  const checkStyleConsistency = (items: ClothingItem[]): boolean => {
+    const styles = items.map(item => item.style);
+    
+    // If all items have the same style, that's perfect
+    if (new Set(styles).size === 1) {
+      return true;
+    }
+    
+    // Some styles go well together
+    const compatibleStyles: Record<string, string[]> = {
+      'casual': ['minimalist', 'streetwear'],
+      'classic': ['minimalist', 'formal'],
+      'minimalist': ['classic', 'casual', 'formal'],
+      'streetwear': ['casual'],
+      'formal': ['classic', 'minimalist']
+    };
+    
+    // Check if all styles are compatible with each other
+    for (let i = 0; i < styles.length; i++) {
+      for (let j = i + 1; j < styles.length; j++) {
+        const style1 = styles[i];
+        const style2 = styles[j];
+        
+        if (style1 !== style2 && 
+            (!compatibleStyles[style1] || !compatibleStyles[style1].includes(style2)) &&
+            (!compatibleStyles[style2] || !compatibleStyles[style2].includes(style1))) {
+          return false;
+        }
+      }
+    }
+    
+    return true;
+  };
   
   // Function to calculate confidence score
   const calculateConfidence = (items: ClothingItem[]): number => {
@@ -204,32 +317,121 @@ export function generateRecommendations(
     if (items.filter(i => i.category === 'top').length > 0 &&
         items.filter(i => i.category === 'bottom').length > 0 &&
         items.filter(i => i.category === 'shoes').length > 0) {
-      confidence += 0.2;
+      confidence += 0.15;
     }
     
     // Check color harmony
-    const uniqueColors = new Set(items.map(i => i.color)).size;
-    if (uniqueColors <= 3) {
+    if (checkColorHarmony(items)) {
+      confidence += 0.1;
+    }
+    
+    // Check pattern consistency
+    const patterns = new Set(items.map(i => i.pattern));
+    if (patterns.size <= 2) {
+      confidence += 0.05;
+    }
+    
+    // Check style consistency
+    if (checkStyleConsistency(items)) {
       confidence += 0.1;
     }
     
     // Check formality consistency
     const formalities = new Set(items.map(i => i.formality));
     if (formalities.size === 1) {
-      confidence += 0.1;
+      confidence += 0.05;
+    }
+    
+    // Check if colors match user preferences
+    const userPreferredColors = new Set(user.preferences.colors.map(c => c.toLowerCase()));
+    const outfitColors = new Set(items.map(i => i.color.toLowerCase()));
+    
+    // Check for overlap between user preferred colors and outfit colors
+    let colorMatchCount = 0;
+    outfitColors.forEach(color => {
+      userPreferredColors.forEach(preferredColor => {
+        if (color.includes(preferredColor) || preferredColor.includes(color)) {
+          colorMatchCount++;
+        }
+      });
+    });
+    
+    if (colorMatchCount > 0) {
+      confidence += 0.05 * Math.min(colorMatchCount / userPreferredColors.size, 1);
+    }
+    
+    // Check if style matches user preferences
+    const userPreferredStyles = new Set(user.preferences.styles);
+    const outfitStyles = new Set(items.map(i => i.style));
+    
+    // Check for overlap between user preferred styles and outfit styles
+    let styleMatchCount = 0;
+    outfitStyles.forEach(style => {
+      if (userPreferredStyles.has(style)) {
+        styleMatchCount++;
+      }
+    });
+    
+    if (styleMatchCount > 0) {
+      confidence += 0.05 * Math.min(styleMatchCount / userPreferredStyles.size, 1);
     }
     
     // Add randomness to make recommendations more diverse
-    confidence += (Math.random() * 0.1) - 0.05;
+    confidence += (Math.random() * 0.05) - 0.025;
     
     // Ensure confidence stays in valid range
     return Math.min(Math.max(confidence, 0.5), 0.99);
   };
   
+  // Generate outfit names based on style and occasion
+  const generateOutfitName = (style: string, occasion: string, weather: string): string => {
+    const styleNames: Record<string, string[]> = {
+      'casual': ['Relaxed', 'Everyday', 'Laid-back', 'Comfortable'],
+      'classic': ['Timeless', 'Traditional', 'Refined', 'Sophisticated'],
+      'minimalist': ['Simple', 'Clean', 'Effortless', 'Modern'],
+      'formal': ['Elegant', 'Polished', 'Sharp', 'Distinguished'],
+      'streetwear': ['Urban', 'Contemporary', 'Trendy', 'Street-smart']
+    };
+    
+    const occasionNames: Record<string, string[]> = {
+      'casual': ['Day Out', 'Everyday Look', 'Weekend Attire'],
+      'business casual': ['Office Ready', 'Professional', 'Workplace Ensemble'],
+      'formal': ['Dressy', 'Upscale', 'Special Occasion'],
+      'date night': ['Evening Out', 'Dinner Date', 'Night on the Town'],
+      'activewear': ['Active', 'On-the-Go', 'Sporty']
+    };
+    
+    const weatherNames: Record<string, string[]> = {
+      'hot': ['Summer', 'Warm Weather', 'Hot Day'],
+      'warm': ['Pleasant Day', 'Sunny', 'Mild Weather'],
+      'cool': ['Autumn', 'Breezy', 'Cool Day'],
+      'cold': ['Winter', 'Cold Weather', 'Chilly Day'],
+      'rainy': ['Rainy Day', 'Wet Weather', 'Drizzly']
+    };
+    
+    const randomStyleName = styleNames[style] ? 
+      styleNames[style][Math.floor(Math.random() * styleNames[style].length)] : 
+      'Stylish';
+    
+    const randomOccasionName = occasionNames[occasion] ? 
+      occasionNames[occasion][Math.floor(Math.random() * occasionNames[occasion].length)] : 
+      'Ensemble';
+    
+    const randomWeatherName = weatherNames[weather] ? 
+      weatherNames[weather][Math.floor(Math.random() * weatherNames[weather].length)] : 
+      '';
+    
+    if (randomWeatherName) {
+      return `${randomStyleName} ${randomOccasionName} for ${randomWeatherName}`;
+    } else {
+      return `${randomStyleName} ${randomOccasionName}`;
+    }
+  };
+  
   // Create casual outfit
   if (tops.length > 0 && bottoms.length > 0) {
     // Create multiple outfit variations
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       // Randomly select components with weighted preference towards user preferences
       const top = tops[Math.floor(Math.random() * tops.length)];
       const bottom = bottoms[Math.floor(Math.random() * bottoms.length)];
@@ -240,26 +442,53 @@ export function generateRecommendations(
       const outerwear = needsOuterwear && outerwears.length > 0 ? 
         outerwears[Math.floor(Math.random() * outerwears.length)] : null;
       
-      const items = [top, bottom, shoe, outerwear].filter(Boolean) as ClothingItem[];
+      // Possibly add an accessory (30% chance)
+      const addAccessory = Math.random() < 0.3;
+      const accessory = addAccessory && accessories.length > 0 ? 
+        accessories[Math.floor(Math.random() * accessories.length)] : null;
+      
+      const items = [top, bottom, shoe, outerwear, accessory].filter(Boolean) as ClothingItem[];
       
       if (items.length >= 2) {
         const confidence = calculateConfidence(items);
         
-        let outfitName = '';
-        if (occasion === 'casual') outfitName = 'Casual Day Outfit';
-        else if (occasion === 'business casual') outfitName = 'Office Ready Look';
-        else if (occasion === 'formal') outfitName = 'Formal Event Ensemble';
-        else if (occasion === 'date night') outfitName = 'Date Night Special';
-        else if (occasion === 'activewear') outfitName = 'Active Day Look';
+        // Determine the outfit style based on the most common style among items
+        const styleCounts: Record<string, number> = {};
+        items.forEach(item => {
+          styleCounts[item.style] = (styleCounts[item.style] || 0) + 1;
+        });
+        
+        let outfitStyle = '';
+        let maxCount = 0;
+        
+        for (const [style, count] of Object.entries(styleCounts)) {
+          if (count > maxCount) {
+            maxCount = count;
+            outfitStyle = style;
+          }
+        }
+        
+        // Generate outfit name
+        const outfitName = generateOutfitName(outfitStyle, occasion, weather);
+        
+        // Generate tags
+        const tags = Array.from(new Set([
+          ...items.map(item => item.style),
+          ...items.map(item => item.color),
+          occasion,
+          weather
+        ]));
         
         outfits.push({
           id: `outfit-${Date.now()}-${i}`,
+          name: outfitName,
           items,
           occasion,
           season,
           weather,
           confidence,
-          style: items.length > 0 ? items[0].style : 'classic'
+          style: outfitStyle,
+          tags
         });
       }
     }
