@@ -1,6 +1,6 @@
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outfit } from "@/utils/recommendations";
 import { cn } from "@/lib/utils";
 import { Check, ThumbsUp, ThumbsDown, BookmarkCheck, Heart } from "lucide-react";
@@ -13,6 +13,9 @@ interface OutfitCardProps {
   onLike?: () => void;
   onDislike?: () => void;
   onSave?: () => void;
+  isLiked?: boolean;
+  isDisliked?: boolean;
+  isSaved?: boolean;
 }
 
 const OutfitCard: React.FC<OutfitCardProps> = ({ 
@@ -20,11 +23,21 @@ const OutfitCard: React.FC<OutfitCardProps> = ({
   className, 
   onLike, 
   onDislike, 
-  onSave 
+  onSave,
+  isLiked = false,
+  isDisliked = false,
+  isSaved = false
 }) => {
-  const [liked, setLiked] = useState(false);
-  const [disliked, setDisliked] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [liked, setLiked] = useState(isLiked);
+  const [disliked, setDisliked] = useState(isDisliked);
+  const [saved, setSaved] = useState(isSaved);
+  
+  // Update internal state when props change
+  useEffect(() => {
+    setLiked(isLiked);
+    setDisliked(isDisliked);
+    setSaved(isSaved);
+  }, [isLiked, isDisliked, isSaved]);
   
   const handleLike = () => {
     if (!liked) {

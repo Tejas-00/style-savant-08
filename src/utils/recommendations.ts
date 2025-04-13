@@ -182,6 +182,8 @@ export function generateRecommendations(
   weather: string,
   style?: string
 ): Outfit[] {
+  console.log("generateRecommendations called with:", { occasion, weather, style });
+  
   // Initialize result array
   const outfits: Outfit[] = [];
   
@@ -195,11 +197,13 @@ export function generateRecommendations(
   };
   
   const season = weatherToSeason[weather] || 'all';
+  console.log("Season mapped from weather:", season);
   
   // Filter items by season and occasion formality
   const seasonalItems = wardrobe.filter(item => 
     item.season === season || item.season === 'all'
   );
+  console.log("Seasonal items count:", seasonalItems.length);
   
   // Map occasion to formality
   const occasionToFormality: Record<string, 'casual' | 'smart casual' | 'formal'> = {
@@ -211,6 +215,7 @@ export function generateRecommendations(
   };
   
   const formality = occasionToFormality[occasion] || 'casual';
+  console.log("Formality mapped from occasion:", formality);
   
   // Get items for each category that match the formality
   const tops = seasonalItems.filter(item => 
@@ -253,6 +258,14 @@ export function generateRecommendations(
     (!style || style === 'all' || item.style === style)
   );
   
+  console.log("Filtered items by category:", { 
+    tops: tops.length, 
+    bottoms: bottoms.length, 
+    outerwears: outerwears.length, 
+    shoes: shoes.length, 
+    accessories: accessories.length 
+  });
+
   // Function to check color harmony
   const checkColorHarmony = (items: ClothingItem[]): boolean => {
     const colors = items.map(item => item.color.toLowerCase());
@@ -492,6 +505,30 @@ export function generateRecommendations(
         });
       }
     }
+  }
+  
+  console.log("Generated outfits count:", outfits.length);
+  
+  // If no outfits were generated, try with more lenient criteria by forcing at least one outfit
+  if (outfits.length === 0 && tops.length > 0 && bottoms.length > 0) {
+    console.log("No outfits generated, creating fallback outfit");
+    
+    const top = tops[Math.floor(Math.random() * tops.length)];
+    const bottom = bottoms[Math.floor(Math.random() * bottoms.length)];
+    const items = [top, bottom];
+    
+    // Generate a basic outfit with these items
+    outfits.push({
+      id: `outfit-fallback-${Date.now()}`,
+      name: `${occasion.charAt(0).toUpperCase() + occasion.slice(1)} Look`,
+      items,
+      occasion,
+      season,
+      weather,
+      confidence: 0.5,
+      style: top.style || 'casual',
+      tags: [occasion, weather, top.style, bottom.style]
+    });
   }
   
   // Sort by confidence score

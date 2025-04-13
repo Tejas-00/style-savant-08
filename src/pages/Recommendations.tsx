@@ -97,55 +97,73 @@ const Recommendations = () => {
     
     // Simulate AI processing time
     setTimeout(() => {
-      const newOutfits = generateRecommendations(
-        mockUser, 
-        mockWardrobe, 
-        occasion, 
-        weather,
-        style !== "all" ? style : undefined
-      );
-      
-      // Apply user preferences to boost confidence score
-      const enhancedOutfits = newOutfits.map(outfit => {
-        let confidenceBoost = 0;
-        
-        // Boost confidence for liked styles
-        if (outfit.style && preferences.likedStyles.has(outfit.style)) {
-          confidenceBoost += 0.1;
-        }
-        
-        // Reduce confidence for disliked styles
-        if (outfit.style && preferences.dislikedStyles.has(outfit.style)) {
-          confidenceBoost -= 0.2;
-        }
-        
-        // Boost confidence for outfits with liked colors
-        const outfitColors = new Set(outfit.items.map(item => item.color.toLowerCase()));
-        outfitColors.forEach(color => {
-          if (preferences.likedColors.has(color)) {
-            confidenceBoost += 0.05;
-          }
-          if (preferences.dislikedColors.has(color)) {
-            confidenceBoost -= 0.1;
-          }
+      try {
+        console.log("Generating recommendations with params:", {
+          occasion, 
+          weather,
+          style
         });
         
-        // Apply boost but ensure confidence stays in valid range
-        const newConfidence = Math.min(Math.max(outfit.confidence + confidenceBoost, 0.5), 0.99);
+        const newOutfits = generateRecommendations(
+          mockUser, 
+          mockWardrobe, 
+          occasion, 
+          weather,
+          style !== "all" ? style : undefined
+        );
         
-        return {
-          ...outfit,
-          confidence: newConfidence
-        };
-      });
-      
-      setOutfits(enhancedOutfits);
-      setIsGenerating(false);
-      
-      toast({
-        title: "New outfits generated!",
-        description: `Found ${enhancedOutfits.length} outfits for ${occasion} occasions in ${weather} weather.`
-      });
+        console.log("Generated outfits:", newOutfits);
+        
+        // Apply user preferences to boost confidence score
+        const enhancedOutfits = newOutfits.map(outfit => {
+          let confidenceBoost = 0;
+          
+          // Boost confidence for liked styles
+          if (outfit.style && preferences.likedStyles.has(outfit.style)) {
+            confidenceBoost += 0.1;
+          }
+          
+          // Reduce confidence for disliked styles
+          if (outfit.style && preferences.dislikedStyles.has(outfit.style)) {
+            confidenceBoost -= 0.2;
+          }
+          
+          // Boost confidence for outfits with liked colors
+          const outfitColors = new Set(outfit.items.map(item => item.color.toLowerCase()));
+          outfitColors.forEach(color => {
+            if (preferences.likedColors.has(color)) {
+              confidenceBoost += 0.05;
+            }
+            if (preferences.dislikedColors.has(color)) {
+              confidenceBoost -= 0.1;
+            }
+          });
+          
+          // Apply boost but ensure confidence stays in valid range
+          const newConfidence = Math.min(Math.max(outfit.confidence + confidenceBoost, 0.5), 0.99);
+          
+          return {
+            ...outfit,
+            confidence: newConfidence
+          };
+        });
+        
+        setOutfits(enhancedOutfits);
+        
+        toast({
+          title: "New outfits generated!",
+          description: `Found ${enhancedOutfits.length} outfits for ${occasion} occasions in ${weather} weather.`
+        });
+      } catch (error) {
+        console.error("Error generating recommendations:", error);
+        toast({
+          title: "Error generating outfits",
+          description: "Something went wrong. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsGenerating(false);
+      }
     }, 1000);
   };
   
@@ -268,6 +286,9 @@ const Recommendations = () => {
                   onLike={() => handleLike(outfit)}
                   onDislike={() => handleDislike(outfit)}
                   onSave={() => handleSave(outfit)}
+                  isLiked={likedOutfits.has(outfit.id)}
+                  isDisliked={dislikedOutfits.has(outfit.id)}
+                  isSaved={savedOutfits.has(outfit.id)}
                 />
               ))
             ) : (
@@ -289,6 +310,9 @@ const Recommendations = () => {
                   onLike={() => handleLike(outfit)}
                   onDislike={() => handleDislike(outfit)}
                   onSave={() => handleSave(outfit)}
+                  isLiked={likedOutfits.has(outfit.id)}
+                  isDisliked={dislikedOutfits.has(outfit.id)}
+                  isSaved={savedOutfits.has(outfit.id)}
                 />
               ))
             ) : (
