@@ -9,9 +9,18 @@ import { Badge } from "@/components/ui/badge";
 interface OutfitCardProps {
   outfit: Outfit;
   className?: string;
+  onLike?: () => void;
+  onDislike?: () => void;
+  onSave?: () => void;
 }
 
-const OutfitCard: React.FC<OutfitCardProps> = ({ outfit, className }) => {
+const OutfitCard: React.FC<OutfitCardProps> = ({ 
+  outfit, 
+  className, 
+  onLike, 
+  onDislike, 
+  onSave 
+}) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -48,18 +57,21 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ outfit, className }) => {
           {outfit.items.map((item) => (
             <div 
               key={item.id} 
-              className="relative aspect-square rounded-lg overflow-hidden border border-border"
+              className="relative aspect-square rounded-lg overflow-hidden border border-border group"
             >
               <img 
                 src={item.imageUrl} 
                 alt={item.name} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               <div className="absolute bottom-2 left-2 right-2">
                 <h4 className="text-xs font-medium text-white truncate">
                   {item.name}
                 </h4>
+                <p className="text-[10px] text-white/80">
+                  {item.category} · {item.color}
+                </p>
               </div>
             </div>
           ))}
@@ -67,16 +79,30 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ outfit, className }) => {
         
         <div className="mt-4 flex justify-between">
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="flex items-center gap-1">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="flex items-center gap-1"
+              onClick={onLike}
+            >
               <ThumbsUp className="h-4 w-4" />
               <span className="sr-md:not-sr-only sr-only">Like</span>
             </Button>
-            <Button size="sm" variant="outline" className="flex items-center gap-1">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="flex items-center gap-1"
+              onClick={onDislike}
+            >
               <ThumbsDown className="h-4 w-4" />
               <span className="sr-md:not-sr-only sr-only">Dislike</span>
             </Button>
           </div>
-          <Button size="sm" className="flex items-center gap-1">
+          <Button 
+            size="sm" 
+            className="flex items-center gap-1"
+            onClick={onSave}
+          >
             <BookmarkCheck className="h-4 w-4" />
             <span>Save Outfit</span>
           </Button>

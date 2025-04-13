@@ -1,4 +1,3 @@
-
 // Mock data for clothing items
 export interface ClothingItem {
   id: string;
@@ -41,6 +40,7 @@ export interface Outfit {
   season: string;
   weather: string;
   confidence: number;
+  style?: string;
 }
 
 // Mock user data
@@ -128,50 +128,145 @@ export const mockWardrobe: ClothingItem[] = [
   },
 ];
 
-// Function to create outfit recommendations based on user, occasion, and weather
+// Enhanced algorithm to generate outfit recommendations
 export function generateRecommendations(
   user: UserProfile,
   wardrobe: ClothingItem[],
   occasion: string,
-  weather: string
+  weather: string,
+  style?: string
 ): Outfit[] {
-  // In a real app, this would be a sophisticated algorithm
-  // For now, we'll just create some mock recommendations
-  
+  // Initialize result array
   const outfits: Outfit[] = [];
   
-  // Casual outfit
-  const casualOutfit: Outfit = {
-    id: "outfit1",
-    items: [
-      wardrobe.find(item => item.category === "top" && item.formality === "casual") || wardrobe[0],
-      wardrobe.find(item => item.category === "bottom" && item.formality === "casual") || wardrobe[1],
-      wardrobe.find(item => item.category === "shoes") || wardrobe[3]
-    ].filter(Boolean) as ClothingItem[],
-    occasion: "casual",
-    season: "spring",
-    weather: "warm",
-    confidence: 0.85
+  // Map weather to season
+  const weatherToSeason: Record<string, string> = {
+    'hot': 'summer',
+    'warm': 'summer',
+    'cool': 'fall',
+    'cold': 'winter',
+    'rainy': 'spring'
   };
   
-  // Smart casual outfit
-  const smartCasualOutfit: Outfit = {
-    id: "outfit2",
-    items: [
-      wardrobe.find(item => item.category === "top" && item.formality === "smart casual") || wardrobe[0],
-      wardrobe.find(item => item.category === "bottom" && item.formality === "smart casual") || wardrobe[4],
-      wardrobe.find(item => item.category === "outerwear") || wardrobe[2],
-      wardrobe.find(item => item.category === "shoes") || wardrobe[3]
-    ].filter(Boolean) as ClothingItem[],
-    occasion: "business casual",
-    season: "fall",
-    weather: "cool",
-    confidence: 0.92
+  const season = weatherToSeason[weather] || 'all';
+  
+  // Filter items by season and occasion formality
+  const seasonalItems = wardrobe.filter(item => 
+    item.season === season || item.season === 'all'
+  );
+  
+  // Map occasion to formality
+  const occasionToFormality: Record<string, 'casual' | 'smart casual' | 'formal'> = {
+    'casual': 'casual',
+    'business casual': 'smart casual',
+    'formal': 'formal',
+    'date night': 'smart casual',
+    'activewear': 'casual'
   };
   
-  outfits.push(casualOutfit, smartCasualOutfit);
+  const formality = occasionToFormality[occasion] || 'casual';
   
-  return outfits;
+  // Get items for each category that match the formality
+  const tops = seasonalItems.filter(item => 
+    item.category === 'top' && 
+    (item.formality === formality || 
+     (formality === 'smart casual' && item.formality === 'casual') ||
+     (formality === 'formal' && item.formality === 'smart casual'))
+  );
+  
+  const bottoms = seasonalItems.filter(item => 
+    item.category === 'bottom' && 
+    (item.formality === formality || 
+     (formality === 'smart casual' && item.formality === 'casual') ||
+     (formality === 'formal' && item.formality === 'smart casual'))
+  );
+  
+  const outerwears = seasonalItems.filter(item => 
+    item.category === 'outerwear' && 
+    (item.formality === formality || 
+     (formality === 'smart casual' && item.formality === 'casual') ||
+     (formality === 'formal' && item.formality === 'smart casual'))
+  );
+  
+  const shoes = seasonalItems.filter(item => 
+    item.category === 'shoes' && 
+    (item.formality === formality || 
+     (formality === 'smart casual' && item.formality === 'casual') ||
+     (formality === 'formal' && item.formality === 'smart casual'))
+  );
+  
+  // Function to calculate confidence score
+  const calculateConfidence = (items: ClothingItem[]): number => {
+    // Base confidence
+    let confidence = 0.6;
+    
+    // Check if we have all required items
+    if (items.filter(i => i.category === 'top').length > 0 &&
+        items.filter(i => i.category === 'bottom').length > 0 &&
+        items.filter(i => i.category === 'shoes').length > 0) {
+      confidence += 0.2;
+    }
+    
+    // Check color harmony
+    const uniqueColors = new Set(items.map(i => i.color)).size;
+    if (uniqueColors <= 3) {
+      confidence += 0.1;
+    }
+    
+    // Check formality consistency
+    const formalities = new Set(items.map(i => i.formality));
+    if (formalities.size === 1) {
+      confidence += 0.1;
+    }
+    
+    // Add randomness to make recommendations more diverse
+    confidence += (Math.random() * 0.1) - 0.05;
+    
+    // Ensure confidence stays in valid range
+    return Math.min(Math.max(confidence, 0.5), 0.99);
+  };
+  
+  // Create casual outfit
+  if (tops.length > 0 && bottoms.length > 0) {
+    // Create multiple outfit variations
+    for (let i = 0; i < 3; i++) {
+      // Randomly select components with weighted preference towards user preferences
+      const top = tops[Math.floor(Math.random() * tops.length)];
+      const bottom = bottoms[Math.floor(Math.random() * bottoms.length)];
+      const shoe = shoes.length > 0 ? shoes[Math.floor(Math.random() * shoes.length)] : null;
+      
+      // Add outerwear based on weather
+      const needsOuterwear = ['cool', 'cold', 'rainy'].includes(weather);
+      const outerwear = needsOuterwear && outerwears.length > 0 ? 
+        outerwears[Math.floor(Math.random() * outerwears.length)] : null;
+      
+      const items = [top, bottom, shoe, outerwear].filter(Boolean) as ClothingItem[];
+      
+      if (items.length >= 2) {
+        const confidence = calculateConfidence(items);
+        
+        let outfitName = '';
+        if (occasion === 'casual') outfitName = 'Casual Day Outfit';
+        else if (occasion === 'business casual') outfitName = 'Office Ready Look';
+        else if (occasion === 'formal') outfitName = 'Formal Event Ensemble';
+        else if (occasion === 'date night') outfitName = 'Date Night Special';
+        else if (occasion === 'activewear') outfitName = 'Active Day Look';
+        
+        outfits.push({
+          id: `outfit-${Date.now()}-${i}`,
+          items,
+          occasion,
+          season,
+          weather,
+          confidence,
+          style: items.length > 0 ? items[0].style : 'classic'
+        });
+      }
+    }
+  }
+  
+  // Sort by confidence score
+  return outfits.sort((a, b) => b.confidence - a.confidence);
 }
 
 // Define personalized style recommendations based on body type
