@@ -184,10 +184,7 @@ export function generateRecommendations(
 ): Outfit[] {
   console.log("generateRecommendations called with:", { occasion, weather, style });
   
-  // Initialize result array
   const outfits: Outfit[] = [];
-  
-  // Map weather to season
   const weatherToSeason: Record<string, string> = {
     'hot': 'summer',
     'warm': 'summer',
@@ -199,12 +196,26 @@ export function generateRecommendations(
   const season = weatherToSeason[weather] || 'all';
   console.log("Season mapped from weather:", season);
   
-  // Filter items by season and occasion formality
-  const seasonalItems = wardrobe.filter(item => 
-    item.season === season || item.season === 'all'
-  );
-  console.log("Seasonal items count:", seasonalItems.length);
+  // Enhanced filtering: Consider user preferences for colors and styles
+  const seasonalItems = wardrobe.filter(item => {
+    // Base season check
+    if (item.season !== season && item.season !== 'all') return false;
+    
+    // Check if color matches user preferences
+    const colorMatch = user.preferences.colors.length === 0 || 
+      user.preferences.colors.some(preferredColor => 
+        item.color.toLowerCase().includes(preferredColor.toLowerCase())
+      );
+      
+    // Check if style matches user preferences
+    const styleMatch = user.preferences.styles.length === 0 || 
+      user.preferences.styles.includes(item.style);
+    
+    return colorMatch && styleMatch;
+  });
   
+  console.log("Filtered seasonal items considering preferences:", seasonalItems.length);
+
   // Map occasion to formality
   const occasionToFormality: Record<string, 'casual' | 'smart casual' | 'formal'> = {
     'casual': 'casual',
@@ -217,60 +228,46 @@ export function generateRecommendations(
   const formality = occasionToFormality[occasion] || 'casual';
   console.log("Formality mapped from occasion:", formality);
   
-  // Get items for each category that match the formality
-  const tops = seasonalItems.filter(item => 
-    item.category === 'top' && 
-    (item.formality === formality || 
-     (formality === 'smart casual' && item.formality === 'casual') ||
-     (formality === 'formal' && item.formality === 'smart casual')) &&
-    (!style || style === 'all' || item.style === style)
-  );
-  
-  const bottoms = seasonalItems.filter(item => 
-    item.category === 'bottom' && 
-    (item.formality === formality || 
-     (formality === 'smart casual' && item.formality === 'casual') ||
-     (formality === 'formal' && item.formality === 'smart casual')) &&
-    (!style || style === 'all' || item.style === style)
-  );
-  
-  const outerwears = seasonalItems.filter(item => 
-    item.category === 'outerwear' && 
-    (item.formality === formality || 
-     (formality === 'smart casual' && item.formality === 'casual') ||
-     (formality === 'formal' && item.formality === 'smart casual')) &&
-    (!style || style === 'all' || item.style === style)
-  );
-  
-  const shoes = seasonalItems.filter(item => 
-    item.category === 'shoes' && 
-    (item.formality === formality || 
-     (formality === 'smart casual' && item.formality === 'casual') ||
-     (formality === 'formal' && item.formality === 'smart casual')) &&
-    (!style || style === 'all' || item.style === style)
-  );
-  
-  const accessories = seasonalItems.filter(item => 
-    item.category === 'accessory' && 
-    (item.formality === formality || 
-     (formality === 'smart casual' && item.formality === 'casual') ||
-     (formality === 'formal' && item.formality === 'smart casual')) &&
-    (!style || style === 'all' || item.style === style)
-  );
-  
-  console.log("Filtered items by category:", { 
-    tops: tops.length, 
-    bottoms: bottoms.length, 
-    outerwears: outerwears.length, 
-    shoes: shoes.length, 
-    accessories: accessories.length 
-  });
-
-  // Function to check color harmony
-  const checkColorHarmony = (items: ClothingItem[]): boolean => {
-    const colors = items.map(item => item.color.toLowerCase());
+  // Enhanced category filtering with preference weights
+  const getItemsForCategory = (category: string, formality: string) => {
+    const items = seasonalItems.filter(item => 
+      item.category === category && 
+      (item.formality === formality || 
+       (formality === 'smart casual' && item.formality === 'casual') ||
+       (formality === 'formal' && item.formality === 'smart casual')) &&
+      (!style || style === 'all' || item.style === style)
+    );
     
-    // Neutral colors go with everything
+    // Sort items by preference match
+    return items.sort((a, b) => {
+      let aScore = 0;
+      let bScore = 0;
+      
+      // Color preference score
+      if (user.preferences.colors.some(color => a.color.toLowerCase().includes(color.toLowerCase()))) aScore += 2;
+      if (user.preferences.colors.some(color => b.color.toLowerCase().includes(color.toLowerCase()))) bScore += 2;
+      
+      // Style preference score
+      if (user.preferences.styles.includes(a.style)) aScore += 3;
+      if (user.preferences.styles.includes(b.style)) bScore += 3;
+      
+      // Pattern preference score
+      if (user.preferences.patterns.includes(a.pattern)) aScore += 1;
+      if (user.preferences.patterns.includes(b.pattern)) bScore += 1;
+      
+      return bScore - aScore;
+    });
+  };
+
+  const tops = getItemsForCategory('top', formality);
+  const bottoms = getItemsForCategory('bottom', formality);
+  const outerwears = getItemsForCategory('outerwear', formality);
+  const shoes = getItemsForCategory('shoes', formality);
+  const accessories = getItemsForCategory('accessory', formality);
+
+  // Enhanced color harmony check
+  const checkColorHarmony = (items: ClothingItem[]): number => {
+    const colors = items.map(item => item.color.toLowerCase());
     const neutralColors = ['black', 'white', 'gray', 'navy', 'beige', 'khaki', 'charcoal', 'brown'];
     
     // Count non-neutral colors
@@ -278,24 +275,23 @@ export function generateRecommendations(
       !neutralColors.some(neutral => color.includes(neutral))
     );
     
-    // If there are more than 2 non-neutral colors, it might be too much
-    if (nonNeutralColors.length > 2) {
-      return false;
-    }
+    // Perfect harmony: all neutrals or just one non-neutral color
+    if (nonNeutralColors.length <= 1) return 1;
     
-    return true;
+    // Good harmony: two complementary non-neutral colors
+    if (nonNeutralColors.length === 2) return 0.8;
+    
+    // Less harmonious: three or more non-neutral colors
+    return 0.5;
   };
   
-  // Function to check style consistency
-  const checkStyleConsistency = (items: ClothingItem[]): boolean => {
+  // Enhanced style consistency check
+  const checkStyleConsistency = (items: ClothingItem[]): number => {
     const styles = items.map(item => item.style);
     
-    // If all items have the same style, that's perfect
-    if (new Set(styles).size === 1) {
-      return true;
-    }
+    // Perfect consistency: all items have the same style
+    if (new Set(styles).size === 1) return 1;
     
-    // Some styles go well together
     const compatibleStyles: Record<string, string[]> = {
       'casual': ['minimalist', 'streetwear'],
       'classic': ['minimalist', 'formal'],
@@ -304,95 +300,63 @@ export function generateRecommendations(
       'formal': ['classic', 'minimalist']
     };
     
-    // Check if all styles are compatible with each other
+    // Check style compatibility
+    let compatibilityScore = 1;
     for (let i = 0; i < styles.length; i++) {
       for (let j = i + 1; j < styles.length; j++) {
         const style1 = styles[i];
         const style2 = styles[j];
         
-        if (style1 !== style2 && 
-            (!compatibleStyles[style1] || !compatibleStyles[style1].includes(style2)) &&
-            (!compatibleStyles[style2] || !compatibleStyles[style2].includes(style1))) {
-          return false;
+        if (style1 !== style2) {
+          if (!compatibleStyles[style1]?.includes(style2) && 
+              !compatibleStyles[style2]?.includes(style1)) {
+            compatibilityScore -= 0.2;
+          }
         }
       }
     }
     
-    return true;
+    return Math.max(compatibilityScore, 0.4);
   };
   
-  // Function to calculate confidence score
+  // Enhanced confidence calculation
   const calculateConfidence = (items: ClothingItem[]): number => {
-    // Base confidence
-    let confidence = 0.6;
+    let confidence = 0.5; // Base confidence
     
-    // Check if we have all required items
+    // Essential items check
     if (items.filter(i => i.category === 'top').length > 0 &&
         items.filter(i => i.category === 'bottom').length > 0 &&
         items.filter(i => i.category === 'shoes').length > 0) {
-      confidence += 0.15;
-    }
-    
-    // Check color harmony
-    if (checkColorHarmony(items)) {
       confidence += 0.1;
     }
     
-    // Check pattern consistency
-    const patterns = new Set(items.map(i => i.pattern));
-    if (patterns.size <= 2) {
-      confidence += 0.05;
-    }
+    // Color harmony
+    confidence += checkColorHarmony(items) * 0.15;
     
-    // Check style consistency
-    if (checkStyleConsistency(items)) {
-      confidence += 0.1;
-    }
+    // Style consistency
+    confidence += checkStyleConsistency(items) * 0.15;
     
-    // Check formality consistency
-    const formalities = new Set(items.map(i => i.formality));
-    if (formalities.size === 1) {
-      confidence += 0.05;
-    }
-    
-    // Check if colors match user preferences
-    const userPreferredColors = new Set(user.preferences.colors.map(c => c.toLowerCase()));
-    const outfitColors = new Set(items.map(i => i.color.toLowerCase()));
-    
-    // Check for overlap between user preferred colors and outfit colors
-    let colorMatchCount = 0;
-    outfitColors.forEach(color => {
-      userPreferredColors.forEach(preferredColor => {
-        if (color.includes(preferredColor) || preferredColor.includes(color)) {
-          colorMatchCount++;
-        }
-      });
-    });
-    
-    if (colorMatchCount > 0) {
-      confidence += 0.05 * Math.min(colorMatchCount / userPreferredColors.size, 1);
-    }
-    
-    // Check if style matches user preferences
-    const userPreferredStyles = new Set(user.preferences.styles);
-    const outfitStyles = new Set(items.map(i => i.style));
-    
-    // Check for overlap between user preferred styles and outfit styles
-    let styleMatchCount = 0;
-    outfitStyles.forEach(style => {
-      if (userPreferredStyles.has(style)) {
-        styleMatchCount++;
+    // User preference match
+    let preferenceScore = 0;
+    items.forEach(item => {
+      // Color preference match
+      if (user.preferences.colors.some(color => 
+        item.color.toLowerCase().includes(color.toLowerCase())
+      )) {
+        preferenceScore += 0.05;
+      }
+      
+      // Style preference match
+      if (user.preferences.styles.includes(item.style)) {
+        preferenceScore += 0.05;
       }
     });
     
-    if (styleMatchCount > 0) {
-      confidence += 0.05 * Math.min(styleMatchCount / userPreferredStyles.size, 1);
-    }
+    confidence += Math.min(preferenceScore, 0.2);
     
-    // Add randomness to make recommendations more diverse
+    // Small random variation for diversity
     confidence += (Math.random() * 0.05) - 0.025;
     
-    // Ensure confidence stays in valid range
     return Math.min(Math.max(confidence, 0.5), 0.99);
   };
   
@@ -441,21 +405,19 @@ export function generateRecommendations(
     }
   };
   
-  // Create casual outfit
+  // Create outfits with enhanced personalization
   if (tops.length > 0 && bottoms.length > 0) {
-    // Create multiple outfit variations
+    // Generate multiple variations prioritizing user preferences
     for (let i = 0; i < 5; i++) {
-      // Randomly select components with weighted preference towards user preferences
-      const top = tops[Math.floor(Math.random() * tops.length)];
-      const bottom = bottoms[Math.floor(Math.random() * bottoms.length)];
-      const shoe = shoes.length > 0 ? shoes[Math.floor(Math.random() * shoes.length)] : null;
+      const top = tops[Math.floor(Math.random() * Math.min(tops.length, 3))];
+      const bottom = bottoms[Math.floor(Math.random() * Math.min(bottoms.length, 3))];
+      const shoe = shoes.length > 0 ? 
+        shoes[Math.floor(Math.random() * Math.min(shoes.length, 3))] : null;
       
-      // Add outerwear based on weather
       const needsOuterwear = ['cool', 'cold', 'rainy'].includes(weather);
       const outerwear = needsOuterwear && outerwears.length > 0 ? 
-        outerwears[Math.floor(Math.random() * outerwears.length)] : null;
+        outerwears[Math.floor(Math.random() * Math.min(outerwears.length, 3))] : null;
       
-      // Possibly add an accessory (30% chance)
       const addAccessory = Math.random() < 0.3;
       const accessory = addAccessory && accessories.length > 0 ? 
         accessories[Math.floor(Math.random() * accessories.length)] : null;
@@ -464,44 +426,31 @@ export function generateRecommendations(
       
       if (items.length >= 2) {
         const confidence = calculateConfidence(items);
+        const outfitStyle = items
+          .map(item => item.style)
+          .reduce((acc, style) => {
+            acc[style] = (acc[style] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
         
-        // Determine the outfit style based on the most common style among items
-        const styleCounts: Record<string, number> = {};
-        items.forEach(item => {
-          styleCounts[item.style] = (styleCounts[item.style] || 0) + 1;
-        });
-        
-        let outfitStyle = '';
-        let maxCount = 0;
-        
-        for (const [style, count] of Object.entries(styleCounts)) {
-          if (count > maxCount) {
-            maxCount = count;
-            outfitStyle = style;
-          }
-        }
-        
-        // Generate outfit name
-        const outfitName = generateOutfitName(outfitStyle, occasion, weather);
-        
-        // Generate tags
-        const tags = Array.from(new Set([
-          ...items.map(item => item.style),
-          ...items.map(item => item.color),
-          occasion,
-          weather
-        ]));
+        const dominantStyle = Object.entries(outfitStyle)
+          .reduce((a, b) => a[1] > b[1] ? a : b)[0];
         
         outfits.push({
           id: `outfit-${Date.now()}-${i}`,
-          name: outfitName,
+          name: generateOutfitName(dominantStyle, occasion, weather),
           items,
           occasion,
           season,
           weather,
           confidence,
-          style: outfitStyle,
-          tags
+          style: dominantStyle,
+          tags: Array.from(new Set([
+            ...items.map(item => item.style),
+            ...items.map(item => item.color),
+            occasion,
+            weather
+          ]))
         });
       }
     }
@@ -531,7 +480,7 @@ export function generateRecommendations(
     });
   }
   
-  // Sort by confidence score
+  // Sort by confidence and return top recommendations
   return outfits.sort((a, b) => b.confidence - a.confidence);
 }
 
