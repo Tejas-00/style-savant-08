@@ -31,6 +31,8 @@ import { mockUser, mockWardrobe, generateRecommendations, Outfit } from "@/utils
 import { pageTransition } from "@/utils/animations";
 import { useToast } from "@/components/ui/use-toast";
 import { OutfitSkeleton } from "@/components/OutfitSkeleton";
+import { LoadingState } from "@/components/LoadingState";
+import { ErrorState } from "@/components/ErrorState";
 
 const Recommendations = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -46,8 +48,8 @@ const Recommendations = () => {
   const [savedOutfits, setSavedOutfits] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState("recommendations");
   const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
   
-  // Preference system - store user preferences
   const [preferences, setPreferences] = useState({
     likedStyles: new Set<string>(),
     dislikedStyles: new Set<string>(),
@@ -55,47 +57,32 @@ const Recommendations = () => {
     dislikedColors: new Set<string>(),
   });
   
-  // Filter outfits based on preferences and threshold
   const filteredOutfits = outfits.filter(outfit => {
-    // Apply confidence threshold
     if (outfit.confidence < confidenceThreshold[0]) return false;
-    
-    // Filter out disliked outfits
     if (dislikedOutfits.has(outfit.id)) return false;
-    
-    // Apply color scheme filter if specified
     if (colorScheme !== "all" && !outfit.items.some(item => item.color.toLowerCase().includes(colorScheme.toLowerCase()))) {
       return false;
     }
-    
-    // Apply style filter if specified
     if (style !== "all" && outfit.style !== style) {
       return false;
     }
-    
     return true;
   });
   
-  // Sort outfits by liked first, then by confidence
   const sortedOutfits = [...filteredOutfits].sort((a, b) => {
-    // Liked outfits first
     if (likedOutfits.has(a.id) && !likedOutfits.has(b.id)) return -1;
     if (!likedOutfits.has(a.id) && likedOutfits.has(b.id)) return 1;
-    
-    // Then by confidence
     return b.confidence - a.confidence;
   });
   
-  // Only display saved outfits in the "saved" tab
   const displayedOutfits = activeTab === "saved" 
     ? sortedOutfits.filter(outfit => savedOutfits.has(outfit.id))
     : sortedOutfits;
   
-  // Generate new recommendations
   const handleGenerateRecommendations = () => {
     setIsGenerating(true);
+    setError(null);
     
-    // Simulate AI processing time
     setTimeout(() => {
       try {
         console.log("Generating recommendations with params:", {
@@ -113,6 +100,7 @@ const Recommendations = () => {
         );
         
         if (newOutfits.length === 0) {
+          setError("No outfits found matching your criteria");
           toast({
             title: "No outfits found",
             description: "Try adjusting your filters to see more recommendations.",
@@ -121,8 +109,8 @@ const Recommendations = () => {
           return;
         }
         
-        console.log("Generated outfits:", newOutfits);
         setOutfits(newOutfits);
+        setError(null);
         
         toast({
           title: "New outfits generated!",
@@ -130,6 +118,7 @@ const Recommendations = () => {
         });
       } catch (error) {
         console.error("Error generating recommendations:", error);
+        setError("Failed to generate recommendations");
         toast({
           title: "Error generating outfits",
           description: "Something went wrong. Please try again.",
@@ -141,9 +130,7 @@ const Recommendations = () => {
     }, 1000);
   };
   
-  // Handle feedback
   const handleLike = (outfit: Outfit) => {
-    // Update liked/disliked sets
     const newLiked = new Set(likedOutfits);
     newLiked.add(outfit.id);
     setLikedOutfits(newLiked);
@@ -152,16 +139,13 @@ const Recommendations = () => {
     newDisliked.delete(outfit.id);
     setDislikedOutfits(newDisliked);
     
-    // Update preferences based on outfit attributes
     const newPreferences = { ...preferences };
     
-    // Add style to liked styles
     if (outfit.style) {
       newPreferences.likedStyles.add(outfit.style);
       newPreferences.dislikedStyles.delete(outfit.style);
     }
     
-    // Add colors to liked colors
     outfit.items.forEach(item => {
       const color = item.color.toLowerCase();
       newPreferences.likedColors.add(color);
@@ -176,7 +160,6 @@ const Recommendations = () => {
   };
   
   const handleDislike = (outfit: Outfit) => {
-    // Update liked/disliked sets
     const newDisliked = new Set(dislikedOutfits);
     newDisliked.add(outfit.id);
     setDislikedOutfits(newDisliked);
@@ -185,10 +168,8 @@ const Recommendations = () => {
     newLiked.delete(outfit.id);
     setLikedOutfits(newLiked);
     
-    // Update preferences based on outfit attributes
     const newPreferences = { ...preferences };
     
-    // Add style to disliked styles
     if (outfit.style) {
       newPreferences.dislikedStyles.add(outfit.style);
       newPreferences.likedStyles.delete(outfit.style);
@@ -222,7 +203,6 @@ const Recommendations = () => {
     setSavedOutfits(newSaved);
   };
   
-  // Re-generate recommendations when filters change significantly
   useEffect(() => {
     handleGenerateRecommendations();
   }, []);
@@ -253,11 +233,13 @@ const Recommendations = () => {
           
           <TabsContent value="recommendations" className="space-y-6">
             {isGenerating ? (
-              <>
-                <OutfitSkeleton />
-                <OutfitSkeleton />
-                <OutfitSkeleton />
-              </>
+              <LoadingState />
+            ) : error ? (
+              <ErrorState 
+                title="Error generating outfits"
+                description={error}
+                onRetry={handleGenerateRecommendations}
+              />
             ) : displayedOutfits.length > 0 ? (
               displayedOutfits.map((outfit) => (
                 <OutfitCard 
