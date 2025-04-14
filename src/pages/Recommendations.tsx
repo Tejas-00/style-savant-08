@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -31,6 +30,7 @@ import OutfitCard from "@/components/OutfitCard";
 import { mockUser, mockWardrobe, generateRecommendations, Outfit } from "@/utils/recommendations";
 import { pageTransition } from "@/utils/animations";
 import { useToast } from "@/components/ui/use-toast";
+import { OutfitSkeleton } from "@/components/OutfitSkeleton";
 
 const Recommendations = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -112,47 +112,21 @@ const Recommendations = () => {
           style !== "all" ? style : undefined
         );
         
-        console.log("Generated outfits:", newOutfits);
-        
-        // Apply user preferences to boost confidence score
-        const enhancedOutfits = newOutfits.map(outfit => {
-          let confidenceBoost = 0;
-          
-          // Boost confidence for liked styles
-          if (outfit.style && preferences.likedStyles.has(outfit.style)) {
-            confidenceBoost += 0.1;
-          }
-          
-          // Reduce confidence for disliked styles
-          if (outfit.style && preferences.dislikedStyles.has(outfit.style)) {
-            confidenceBoost -= 0.2;
-          }
-          
-          // Boost confidence for outfits with liked colors
-          const outfitColors = new Set(outfit.items.map(item => item.color.toLowerCase()));
-          outfitColors.forEach(color => {
-            if (preferences.likedColors.has(color)) {
-              confidenceBoost += 0.05;
-            }
-            if (preferences.dislikedColors.has(color)) {
-              confidenceBoost -= 0.1;
-            }
+        if (newOutfits.length === 0) {
+          toast({
+            title: "No outfits found",
+            description: "Try adjusting your filters to see more recommendations.",
+            variant: "destructive"
           });
-          
-          // Apply boost but ensure confidence stays in valid range
-          const newConfidence = Math.min(Math.max(outfit.confidence + confidenceBoost, 0.5), 0.99);
-          
-          return {
-            ...outfit,
-            confidence: newConfidence
-          };
-        });
+          return;
+        }
         
-        setOutfits(enhancedOutfits);
+        console.log("Generated outfits:", newOutfits);
+        setOutfits(newOutfits);
         
         toast({
           title: "New outfits generated!",
-          description: `Found ${enhancedOutfits.length} outfits for ${occasion} occasions in ${weather} weather.`
+          description: `Found ${newOutfits.length} outfits for ${occasion} occasions in ${weather} weather.`
         });
       } catch (error) {
         console.error("Error generating recommendations:", error);
@@ -278,7 +252,13 @@ const Recommendations = () => {
           </TabsList>
           
           <TabsContent value="recommendations" className="space-y-6">
-            {displayedOutfits.length > 0 ? (
+            {isGenerating ? (
+              <>
+                <OutfitSkeleton />
+                <OutfitSkeleton />
+                <OutfitSkeleton />
+              </>
+            ) : displayedOutfits.length > 0 ? (
               displayedOutfits.map((outfit) => (
                 <OutfitCard 
                   key={outfit.id} 
@@ -295,7 +275,7 @@ const Recommendations = () => {
               <div className="text-center py-12 border border-dashed border-border rounded-xl">
                 <p className="text-muted-foreground mb-4">No outfits found. Try adjusting your filters.</p>
                 <Button onClick={handleGenerateRecommendations} disabled={isGenerating}>
-                  {isGenerating ? "Generating..." : "Generate New Recommendations"}
+                  Generate New Recommendations
                 </Button>
               </div>
             )}
